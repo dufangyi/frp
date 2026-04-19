@@ -1,0 +1,37 @@
+name: Build FRP Windows EXE
+
+on:
+  push:
+    branches: [ main ]  # 推送到 main 时触发
+  workflow_dispatch:    # 允许手动触发
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: fatedier/frp  # 拉取官方 frp 源码
+          ref: v0.58.1              # 你要编译的版本号（可改）
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'        # 匹配 frp 要求的 Go 版本
+          check-latest: true
+
+      - name: Build frpc.exe & frps.exe
+        run: |
+          go env -w GOPROXY=https://goproxy.cn,direct
+          go build -o frpc.exe ./cmd/frpc
+          go build -o frps.exe ./cmd/frps
+        shell: pwsh
+
+      - name: Upload EXE artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frp-windows-exe
+          path: |
+            frpc.exe
+            frps.exe
